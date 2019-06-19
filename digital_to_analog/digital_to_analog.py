@@ -13,6 +13,7 @@ instructions:   1. run server
 import numpy as np
 from os import makedirs, path
 import errno
+import random
 
 
 def sample_device(board_num):
@@ -23,7 +24,7 @@ def sample_device(board_num):
     #try:
         # Get a value from the device
         # value = ul.v_in(board_num, channel, ai_range)
-    value = np.random.random(1)
+    value = random.random()
 
     #except ULError:
     #    return np.nan()

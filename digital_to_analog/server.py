@@ -70,9 +70,7 @@ def main_loop(maximums, socket):
             # check if the game demanded a new value. if it didn't continue. if it did send it.
             try:
                 incoming = socket.recv_json(flags=zmq.NOBLOCK)
-                normalizedVal = str(noramlized_value)
-                print(normalizedVal)
-                socket.send_json(str(noramlized_value))
+                socket.send_json(noramlized_value)
             except zmq.error.ZMQError:
                 continue
 
@@ -93,8 +91,9 @@ def server_socket():
             socket.send_json("fin")
             continue
         elif incoming == 1:
-            socket.send_json("started")
+            socket.send_json(1)
             main_loop(max_pressure, socket)
+        socket.send_json("fin")
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from mcculw.ul import ULError
 import numpy as np
 from os import makedirs, path
 import errno
+import random
 
 
 def sample_device(board_num):
@@ -16,7 +17,7 @@ def sample_device(board_num):
         value = ul.v_in(board_num, channel, ai_range)
 
     except ULError:
-        return np.random.random(1)
+        return random.random()[0]
     return value
 
 
