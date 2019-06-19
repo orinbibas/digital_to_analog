@@ -1,3 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Main module."""
+"""Main module.
+instructions:   1. run server
+                2. run client"""
+
