@@ -95,6 +95,8 @@ class Game:
       self.bblocks=pygame.sprite.Group()
       self.bblocks.add(self.bblock)
       self.all_sprites.add(self.bblock)
+      return x,h1,h2
+
    def new(self):
       self.bird=Bird(self)
       self.all_sprites=pygame.sprite.Group()
@@ -109,6 +111,8 @@ class Game:
       self.all_sprites.add(self.bblock)
       self.score=0
       self.gover=0
+      return self.bird.pos
+
    def msg(self,text,x,y,color,size):
       self.font=pygame.font.SysFont('georgia',size,bold=1)
       msgtxt=self.font.render(text,1,color)
@@ -178,6 +182,20 @@ class Game:
          if event.type==pygame.KEYDOWN:
                if event.key==pygame.K_RETURN:
                   self.pause()
+   def start(self):
+      name = easygui.enterbox('full name:')
+      now = datetime.datetime.now()
+      date= now.strftime('%D')
+      f_name = name+date
+      max_vals = self.get_max()
+   def get_max(self):
+      max_start = easygui.ccbox('insert image with hebrew inst for max check')
+      print('display some image and sound')
+      #send to the server start recording
+      print('stop')
+
+      game_start=easygui.ccbox('insert image before the game starts')
+
    def run(self):
       while 1:
          self.event()
@@ -186,5 +204,6 @@ class Game:
          pygame.display.flip()
 g=Game()
 while g.run:
+   g.start()
    g.new()
    g.run()

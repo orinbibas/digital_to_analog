@@ -1,4 +1,4 @@
-import pygame,random
+import pygame,random,datetime,easygui
 pygame.init()
 white=(255,255,255)
 black=(0,0,0)
@@ -81,26 +81,20 @@ class Game:
       self.gover=0
       self.last=pygame.time.get_ticks()
    def blockgen(self):
-        i=0
-        x=0
-        while Game:
-            if i > len(blist)-1:
-               i=0
-            h = blist[i]
-            h1= h[0]
-            h2= h[1]
-            if x > bg.get_width():
-               x=0            
-            self.tblock=TBlock(x,h1)
-            self.tblocks=pygame.sprite.Group()
-            self.tblocks.add(self.tblock)
-            self.all_sprites.add(self.tblock)
-            self.bblock=BBlock(x,h2)
-            self.bblocks=pygame.sprite.Group()
-            self.bblocks.add(self.bblock)
-            self.all_sprites.add(self.bblock)
-            i += 1
-            x += self.tblock.image.get_width()
+      x=random.randint(620,650)
+      h = random.choice(blist)
+      h1=h[0]
+      h2=h[1]
+      self.tblock=TBlock(x,h1)
+      self.tblocks=pygame.sprite.Group()
+      self.tblocks.add(self.tblock)
+      self.all_sprites.add(self.tblock)
+      self.bblock=BBlock(x,h2)
+      self.bblocks=pygame.sprite.Group()
+      self.bblocks.add(self.bblock)
+      self.all_sprites.add(self.bblock)
+      return x,h1,h2
+
    def new(self):
       self.bird=Bird(self)
       self.all_sprites=pygame.sprite.Group()
@@ -115,6 +109,8 @@ class Game:
       self.all_sprites.add(self.bblock)
       self.score=0
       self.gover=0
+      return self.bird.pos
+      
    def msg(self,text,x,y,color,size):
       self.font=pygame.font.SysFont('georgia',size,bold=1)
       msgtxt=self.font.render(text,1,color)
@@ -190,7 +186,28 @@ class Game:
          self.update()
          self.draw()
          pygame.display.flip()
+
+   def start_screen(self):
+      name = easygui.enterbox('full name:')
+      now = datetime.datetime.now()
+      date= now.strftime('%D')
+      f_name = name+date
+      max_vals = self.get_max()
+   def get_max(self):
+      max_start = easygui.ccbox('insert image with hebrew inst for max check')
+      print('display some image and sound')
+      #send to the server start recording
+      print('stop')
+      print('start again')
+      print('stop')
+      print('start again')
+      print('stop')
+      game_start=easygui.ccbox('insert image before the game starts')
+
+      
+
 g=Game()
 while g.run:
+   g.start_screen()
    g.new()
    g.run()
