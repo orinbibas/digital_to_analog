@@ -6,10 +6,10 @@ import time
 from datetime import datetime
 from time import sleep
 import numpy as np
-from mcculw import ul
-from mcculw.enums import ULRange
-from mcculw.ul import ULError
-import dac_functions as nf
+# from mcculw import ul
+# from mcculw.enums import ULRange
+# from mcculw.ul import ULError
+import dac_function as nf
 from scipy import signal
 
 
@@ -71,7 +71,7 @@ def main_loop(maximums, socket):
             try:
                 incoming = socket.recv_json(flags=zmq.NOBLOCK)
                 socket.send_json(noramlized_value)
-            except zmq.ZMQError:
+            except zmq.error.ZMQError:
                 continue
 
 

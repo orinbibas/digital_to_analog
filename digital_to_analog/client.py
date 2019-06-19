@@ -33,7 +33,7 @@ def configure_client(client_socket):
 
     for i in range(2):
         outgoing = "gimme"
-        client_socket.send_json(outgoing)
+        client_socket.send_json(outgoing, flags=0)
         incoming = client_socket.recv_json()
 
         # do stuff with incoming data
