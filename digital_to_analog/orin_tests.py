@@ -1,4 +1,7 @@
-import pygame,random,datetime,easygui
+import pygame,random,datetime,easygui,winsound
+from client import *
+#from prefrences import dw,dh,max_time,pic_names,path_to_save
+
 pygame.init()
 white=(255,255,255)
 black=(0,0,0)
@@ -110,7 +113,7 @@ class Game:
       self.score=0
       self.gover=0
       return self.bird.pos
-      
+
    def msg(self,text,x,y,color,size):
       self.font=pygame.font.SysFont('georgia',size,bold=1)
       msgtxt=self.font.render(text,1,color)
@@ -192,16 +195,15 @@ class Game:
       now = datetime.datetime.now()
       date= now.strftime('%D')
       f_name = name+date
-      max_vals = self.get_max()
+      #send info to server
+      self.get_max()
+
    def get_max(self):
-      max_start = easygui.ccbox('insert image with hebrew inst for max check')
-      print('display some image and sound')
+      easygui.ccbox('insert image with hebrew inst for max check')
       #send to the server start recording
-      print('stop')
-      print('start again')
-      print('stop')
-      print('start again')
-      print('stop')
+      winsound.Beep(250,3000)
+
+      easygui.ccbox('dont touch the sensor for 3 seconds and then press cont')
       game_start=easygui.ccbox('insert image before the game starts')
 
       
