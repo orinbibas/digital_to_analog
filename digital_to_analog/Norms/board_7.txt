@@ -1,1 +1,1 @@
-Max Pressure value: 0.19999999787379813 Neutons
+Max Pressure value: 10 Neutons

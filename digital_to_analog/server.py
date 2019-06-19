@@ -6,9 +6,9 @@ import time
 from datetime import datetime
 from time import sleep
 import numpy as np
-# from mcculw import ul
-# from mcculw.enums import ULRange
-# from mcculw.ul import ULError
+from mcculw import ul
+from mcculw.enums import ULRange
+from mcculw.ul import ULError
 import digital_to_analog as nf
 from scipy import signal
 
@@ -35,7 +35,7 @@ def configure():
                 break
         print(f"adding {max_val} to pressures")
         max_pressures.append(max_val)
-        nf.save_board_norm_to_file(i, max_val / 5)
+        nf.save_board_norm_to_file(i, max_val )
     return max_pressures
 
 

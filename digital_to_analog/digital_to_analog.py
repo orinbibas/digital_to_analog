@@ -1,33 +1,25 @@
 # -*- coding: utf-8 -*-
 
-"""Main module.
-instructions:   1. run server
-                2. run client"""
-
-
 """ dac functions"""
-# from mcculw import ul
-# from mcculw.enums import ULRange
-
-# from mcculw.ul import ULError
-import numpy as np
+from mcculw import ul
+from mcculw.enums import ULRange
+from mcculw.ul import ULError
 from os import makedirs, path
 import errno
-import random
+import numpy as np
 
 
 def sample_device(board_num):
     # Reads an A/D input channel, and returns a voltage value only if the board is on.
     channel = 2
-    # ai_range = ULRange.BIP10VOLTS
+    ai_range = ULRange.BIP10VOLTS
 
-    #try:
+    try:
         # Get a value from the device
-        # value = ul.v_in(board_num, channel, ai_range)
-    value = random.random()
+        value = ul.v_in(board_num, channel, ai_range)
 
-    #except ULError:
-    #    return np.nan()
+    except ULError:
+        return 10
     return value
 
 
