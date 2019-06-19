@@ -11,17 +11,15 @@ from scipy import signal
 
 def configure():
     max_pressures = []
-    for i in range(8):
-        num_board = nf.sample_device(i)
-        if np.isnan(num_board):
-            max_pressures.append(None)
-            # nf.save_board_norm_to_file(i, np.nan)
-            continue
-        print(f"configuring board number {i}")
+    connections = nf.detect_connections()
+    for connection in connections:
+        print(f"configuring board number {connection[0]}, channel {connection[1]}")
+        board_num = connection[0]
+        channel = connection[1]
         t_s = time.time()
-        max_val = num_board
+        max_val = 0
         while True:
-            value = nf.sample_device(i)
+            value = nf.sample_device(board_num, channel)
             # print(f"value: {value}")
             max_val = value if value > max_val else max_val
             t_s2 = time.time()
@@ -31,21 +29,31 @@ def configure():
                 break
         print(f"adding {max_val} to pressures")
         max_pressures.append(max_val)
-        nf.save_board_norm_to_file(i, max_val / 5)
-    return max_pressures
+        nf.write_line_to_file(connection, "w", f"Channel number {channel}\n"
+                                              f"Max Pressure: {max_val} Newtons\n\n")
+    return connections, max_pressures
     
 
-def main_loop(maximums):
+def main_loop(connections, maximums):
     while True:
         # take first timestamp
         ts_1 = time.time()
 
-        for board_number in range(8):    
+        for connection in connections:
+            # get the board and channel numbers
+            board_number = connection[0]
+            channel = connection[1]
+
             # sample value from device
-            current_value = nf.sample_device(board_number)
+            current_value = nf.sample_device(board_number, channel)
 
             if np.isnan(current_value):
                 continue
+
+            # write a line to the log file
+            nf.write_line_to_file(connection, "a",
+                                  f"{datetime.fromtimestamp(time.time())}, "
+                                  f"{current_value}\n")
 
             # normalize the voltage value
             noramlized_value = nf.normalize_value(current_value, maximums[board_number])
@@ -69,6 +77,6 @@ def main_loop(maximums):
 
 
 if __name__ == "__main__":
-    maximum_pressures = configure()
+    connections, maximum_pressures = configure()
 
-    main_loop(maximum_pressures)
+    main_loop(connections, maximum_pressures)
