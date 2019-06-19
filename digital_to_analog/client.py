@@ -40,4 +40,3 @@ if __name__ == "__main__":
     socket = initialize_client_socket()
     configure_client(socket)
     game_client(socket)
-
