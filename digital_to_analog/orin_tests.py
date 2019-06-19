@@ -1,5 +1,3 @@
-
-"""game interface"""
 import pygame,random
 pygame.init()
 white=(255,255,255)
@@ -14,7 +12,7 @@ pygame.display.set_caption('Flappy Bird')
 pimg=[pygame.image.load(str(i)+'.png') for i in range(1,5)]
 clock=pygame.time.Clock()
 vec=pygame.math.Vector2
-bg=pygame.image.load('bg.png') #change bg 
+bg=pygame.image.load('bg.png')
 bw=bg.get_width()
 blist=[[50,310],[60,300],[70,290],[80,280],[90,270],[100,260],[110,250],[120,240],[130,230],[140,220],[150,210],[160,200],[170,190],[180,180],
        [190,170],[200,160],[210,150],[220,140],[230,130],[240,120],[250,110],[260,100],[270,90],[280,80]
@@ -33,9 +31,9 @@ class Bird(pygame.sprite.Sprite):
    def update(self):
       self.acc=vec(0,1.5)
       self.vel=vec(0,0)
-      keys=pygame.key.get_repeat()(0.1,0.2)
-      if keys[pygame.K_SPACE]: #update to value from sensors 
-         self.acc.y=-1.5*keys
+      keys=pygame.key.get_pressed()
+      if keys[pygame.K_SPACE]:
+         self.acc.y=-1.5
          if self.fc+1<28:
             self.fc+=1
             self.image=pimg[self.fc//7]
@@ -83,18 +81,25 @@ class Game:
       self.gover=0
       self.last=pygame.time.get_ticks()
    def blockgen(self):
-      x=random.randint(620,650)
-      h=random.choice(blist)
-      h1=h[0]-100
-      h2=h[1]
-      self.tblock=TBlock(x,h1)
-      self.tblocks=pygame.sprite.Group()
-      self.tblocks.add(self.tblock)
-      self.all_sprites.add(self.tblock)
-      self.bblock=BBlock(x,h2)
-      self.bblocks=pygame.sprite.Group()
-      self.bblocks.add(self.bblock)
-      self.all_sprites.add(self.bblock)
+        i=0
+        x=0
+        while Game:
+            h = blist[i]
+            if x > bg.get_width()-TBlock.image.get_width():
+                x=0            
+            h1=h[0]
+            h2=h[1]
+            self.tblock=TBlock(x,h1)
+            self.tblocks=pygame.sprite.Group()
+            self.tblocks.add(self.tblock)
+            self.all_sprites.add(self.tblock)
+            self.bblock=BBlock(x,h2)
+
+            self.bblocks=pygame.sprite.Group()
+            self.bblocks.add(self.bblock)
+            self.all_sprites.add(self.bblock)
+            i += 1
+            x += tp.get_width()
    def new(self):
       self.bird=Bird(self)
       self.all_sprites=pygame.sprite.Group()

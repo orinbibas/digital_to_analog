@@ -33,15 +33,15 @@ class Bird(pygame.sprite.Sprite):
    def update(self):
       self.acc=vec(0,1.5)
       self.vel=vec(0,0)
-      keys=pygame.key.get_repeat()(0.1,0.2)
-      if keys[pygame.K_SPACE]: #update to value from sensors 
+      keys= #change to value request
+      if keys > 0: #update to value from sensors 
          self.acc.y=-1.5*keys
-         if self.fc+1<28:
+         if self.fc+1<28: #for changes in the bird's picture 
             self.fc+=1
             self.image=pimg[self.fc//7]
             self.image=pygame.transform.scale(self.image,(100,85))
          else:
-            self.fc=0
+            self.fc=0 
       else:
          self.image=pimg[0]
          self.image=pygame.transform.scale(self.image,(100,85))
