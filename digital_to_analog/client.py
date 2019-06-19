@@ -14,6 +14,8 @@ def initialize_client_socket():
 
 
 def game_client(client_socket):
+    client_socket.send_json("start game")
+
     # iterating loop for sampling - add game
     print("playing")
     for i in range(4):
@@ -27,6 +29,8 @@ def game_client(client_socket):
 
 def configure_client(client_socket):
     print("configuring")
+    client_socket.send_json("configure")
+
     for i in range(2):
         outgoing = "gimme"
         client_socket.send_json(outgoing)
