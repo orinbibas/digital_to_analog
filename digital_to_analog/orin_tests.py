@@ -14,7 +14,7 @@ clock=pygame.time.Clock()
 vec=pygame.math.Vector2
 bg=pygame.image.load('bg.png')
 bw=bg.get_width()
-blist=[[50,310],[60,300],[70,290],[80,280],[90,270],[100,260],[110,250],[120,240],[130,230],[140,220],[150,210],[160,200],[170,190],[180,180],
+blist=[[0,200],[0,200],[0,200],[80,280],[90,270],[100,260],[110,250],[120,240],[130,230],[140,220],[150,210],[160,200],[170,190],[180,180],
        [190,170],[200,160],[210,150],[220,140],[230,130],[240,120],[250,110],[260,100],[270,90],[280,80]
        ,[290,70],[300,60],[310,50]]
 class Bird(pygame.sprite.Sprite):
@@ -84,22 +84,23 @@ class Game:
         i=0
         x=0
         while Game:
+            if i > len(blist)-1:
+               i=0
             h = blist[i]
-            if x > bg.get_width()-TBlock.image.get_width():
-                x=0            
-            h1=h[0]
-            h2=h[1]
+            h1= h[0]
+            h2= h[1]
+            if x > bg.get_width():
+               x=0            
             self.tblock=TBlock(x,h1)
             self.tblocks=pygame.sprite.Group()
             self.tblocks.add(self.tblock)
             self.all_sprites.add(self.tblock)
             self.bblock=BBlock(x,h2)
-
             self.bblocks=pygame.sprite.Group()
             self.bblocks.add(self.bblock)
             self.all_sprites.add(self.bblock)
             i += 1
-            x += tp.get_width()
+            x += self.tblock.image.get_width()
    def new(self):
       self.bird=Bird(self)
       self.all_sprites=pygame.sprite.Group()
