@@ -9,7 +9,7 @@ import numpy as np
 # from mcculw import ul
 # from mcculw.enums import ULRange
 # from mcculw.ul import ULError
-import dac_function as nf
+import digital_to_analog as nf
 from scipy import signal
 
 
@@ -70,7 +70,9 @@ def main_loop(maximums, socket):
             # check if the game demanded a new value. if it didn't continue. if it did send it.
             try:
                 incoming = socket.recv_json(flags=zmq.NOBLOCK)
-                socket.send_json(noramlized_value)
+                normalizedVal = str(noramlized_value)
+                print(normalizedVal)
+                socket.send_json(str(noramlized_value))
             except zmq.error.ZMQError:
                 continue
 
@@ -85,11 +87,13 @@ def server_socket():
     # iterate through requests of data
     while True:
         incoming = socket.recv_json()
-        if incoming == "configure":
+        print(incoming)
+        if incoming == 0:
             max_pressure = configure()
             socket.send_json("fin")
-        elif incoming == "start game":
-            socket.send_json(datetime.fromtimestamp(time.time()))
+            continue
+        elif incoming == 1:
+            socket.send_json("started")
             main_loop(max_pressure, socket)
 
 
