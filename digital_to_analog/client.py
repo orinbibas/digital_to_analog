@@ -64,6 +64,10 @@ class Bird(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def pre_run():
+        """
+        gui input of sensors serial no
+        """
+
         msg = "Enter sensors details"
         title = "Sensors cofiguration"
         fieldNames = ["Channel00","Channel01","Channel02","Channel03","Channel04","Channel05","Chanel06","Chanel07"]
@@ -81,6 +85,9 @@ class Bird(pygame.sprite.Sprite):
         return actives , str_vals
         
     def assert_sensors(actives,str_vals):
+        """
+        double check with user his inputs
+        """
         actives,str_vals = pre_run()
         check = easygui.ccbox(msg=f'this are the active sensors and their serial number\n {actives} \n if any of the information is not correct please press cancel and start again',title='sensors info')
         if check == True:
