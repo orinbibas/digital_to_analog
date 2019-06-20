@@ -34,7 +34,7 @@ class Bird(pygame.sprite.Sprite):
         self.acc = vec(0, 0)
         self.pos = vec(self.rect.center)
         self.fc = 0
-        self.conf_channels = conf_channels(channels)
+        self.connected_channels = self.conf_channels(channels)
         self.socket = initialize_client_socket()
 
     def update(self):
@@ -68,7 +68,6 @@ class Bird(pygame.sprite.Sprite):
         now = datetime.datetime.now()
         date = now.strftime('%D')
         f_name = name + date
-
         self.get_max(f_name)
 
     def get_max(self,fname):
@@ -77,7 +76,7 @@ class Bird(pygame.sprite.Sprite):
         self.socket.send_json(0, flags=0, ) 
         winsound.Beep(250, 3000)
         incoming = self.socket.recv_json()
-        self.socket.send_json(f_name)
+        self.socket.send_json(self.connected_channels(channels))
         incoming = self.socket.recv_json()
         easygui.ccbox('insert image: dont touch the sensor for 3 seconds and then press cont')
         self.socket.send_json(0, flags=0, ) #update flag for min config
@@ -86,14 +85,13 @@ class Bird(pygame.sprite.Sprite):
         self.socket.send_json(0, flags=0, ) #update flag for start recording for game (maybe in 3 sec countdown)
         incoming = self.socket.recv_json() 
 
-        def get_vals(channels):
-            str_chan = ''
-            for i in channels:
-                if not i[1] == 0:
-                    str_chan+=i[0]+'_'+str(i[1])+','
-
-            self.socket.send_json(str_chan ) #send str of connected chanels only (format 'channel1_num,chanel2_num,')
-            incoming = self.socket.recv_json() 
+    def conf_channels(channels):
+        str_chan = ''
+        for i in channels:
+            if not i[1] == 0:
+                str_chan+=i[0]+'_'+str(i[1])+','
+        self.socket.send_json(str_chan ) #send str of connected chanels only (format 'channel1_num,chanel2_num,')
+        incoming = self.socket.recv_json() 
 
             
 class TBlock(pygame.sprite.Sprite):
@@ -173,21 +171,21 @@ class Game:
     def pause(self):
         wait = 1
         while wait:
-        self.socket.send_json(0, flags=0, ) #update flag for PAUSE rec (not quit and save)
-        incoming = self.socket.recv_json() 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    self.socket.send_json(0, flags=0, ) #update flag for QUIT AND SAVE DATA
-                    incoming = self.socket.recv_json() 
-                    quit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        wait = 0
-                        self.socket.send_json(0, flags=0, ) #update flag for CONT
-                        incoming = self.socket.recv_json()
-            self.msg("Paused", dw - 100, dh - 100, blue, 40)
-            pygame.display.flip()
+            self.socket.send_json(0, flags=0, ) #update flag for PAUSE rec (not quit and save)
+            incoming = self.socket.recv_json() 
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        self.socket.send_json(0, flags=0, ) #update flag for QUIT AND SAVE DATA
+                        incoming = self.socket.recv_json() 
+                        quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:
+                            wait = 0
+                            self.socket.send_json(0, flags=0, ) #update flag for CONT
+                            incoming = self.socket.recv_json()
+                self.msg("Paused", dw - 100, dh - 100, blue, 40)
+                pygame.display.flip()
 
     def over(self):
         wait = 1
@@ -255,11 +253,6 @@ class Game:
             self.draw()
             pygame.display.flip()
 
-class conf_channels(channels):
-    def __init__:
-        self.channels = channels
-
-
 def initialize_client_socket():
     context = zmq.Context()
 
@@ -272,8 +265,10 @@ def initialize_client_socket():
 if __name__ == "__main__":
     g = Game()
     b = Bird(g)
-    while g.run:
-        b.start_screen()
-        g.new()
-        g.run()
+    print(b.conf_channels)
+
+    #while g.run:
+        #b.start_screen()
+        #g.new()
+        #g.run()
 
