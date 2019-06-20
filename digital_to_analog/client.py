@@ -63,7 +63,7 @@ class Bird(pygame.sprite.Sprite):
         self.rect.center = self.pos
         self.mask = pygame.mask.from_surface(self.image)
 
-    def pre_run():
+    def pre_run(self):
         """
         gui input of sensors serial no
         """
@@ -84,7 +84,7 @@ class Bird(pygame.sprite.Sprite):
         
         return actives , str_vals
         
-    def assert_sensors(actives,str_vals):
+    def assert_sensors(self,actives,str_vals):
         """
         double check with user his inputs
         """
