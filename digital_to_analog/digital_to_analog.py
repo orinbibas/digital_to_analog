@@ -22,7 +22,6 @@ class Connection:
 
 
     def sample_device(self, board_num):
-
         # Reads an A/D input channel, and returns a voltage value only if the board is on.
         ai_range = ULRange.BIP10VOLTS
 
@@ -52,8 +51,8 @@ class Connection:
 
 
 def normalize_value(value, extremums):
-    minimum_value = extremums[0]
-    maximum_value = extremums[1]
+    minimum_value = extremums[1]
+    maximum_value = extremums[0]
 
     if value > maximum_value:
         return 1

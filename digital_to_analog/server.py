@@ -97,6 +97,7 @@ def main_loop(connections, socket):
                     df_list = [connection.df for connection in connections]
                     socket.send_json("gottit")
                     return df_list
+                print(noramlized_value)
                 socket.send_json(noramlized_value)
 
             except zmq.error.ZMQError:

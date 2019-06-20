@@ -36,6 +36,7 @@ class Bird(pygame.sprite.Sprite):
         self.fc = 0
         self.socket = socket
         self.connected_channels = self.conf_channels(channels)
+        self.last_income = 0
 
     def update(self):
         self.acc = vec(0, 1.5)
@@ -43,8 +44,16 @@ class Bird(pygame.sprite.Sprite):
         outgoing = 1
         self.socket.send_json(outgoing)
         incoming = self.socket.recv_json()
-        if incoming > 0:
-            self.acc.y = -1.5 * incoming
+        if incoming > 0.8:
+            self.acc.y = -2.5 * incoming
+            if self.fc + 1 < 28:
+                self.fc += 1
+                self.image = pimg[self.fc // 7]
+                self.image = pygame.transform.scale(self.image, (100, 85))
+            else:
+                self.fc = 0
+        elif incoming < 0.7:
+            self.acc.y = 3 * incoming
             if self.fc + 1 < 28:
                 self.fc += 1
                 self.image = pimg[self.fc // 7]
@@ -62,6 +71,7 @@ class Bird(pygame.sprite.Sprite):
             self.pos.y = dh - self.rect.width / 2
         self.rect.center = self.pos
         self.mask = pygame.mask.from_surface(self.image)
+        self.last_income = incoming
 
     def start_screen(self):
         name = easygui.enterbox('full name:')

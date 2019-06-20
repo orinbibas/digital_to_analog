@@ -3,8 +3,8 @@ import os
 #Channel names: leave 'None' if not connected.
 #if connected: enter channel number minus 1 (for 1 enter 0, for 2 enter 1, for 3 enter 2)
 channels= [('0', 0),
-('1', 'LW43893'),
-('2', 'LW43894'),
+('1', 0),
+('2', 'LW36770'),
 ('3', 0),
 ('4', 0),
 ('5', 0),
