@@ -1,6 +1,6 @@
 import pygame,random,datetime,easygui,winsound
 from client import *
-#from prefrences import dw,dh,max_time,pic_names,path_to_save
+from preferences import dw,dh,max_time,path_to_save
 
 pygame.init()
 white=(255,255,255)
@@ -8,8 +8,7 @@ black=(0,0,0)
 red=(255,0,0)
 green=(0,255,0)
 blue=(0,0,255)
-dw=600
-dh=476
+
 screen=pygame.display.set_mode([dw,dh])
 pygame.display.set_caption('Flappy Bird')
 pimg=[pygame.image.load(str(i)+'.png') for i in range(1,5)]
@@ -202,10 +201,9 @@ class Game:
       easygui.ccbox('insert image with hebrew inst for max check')
       #send to the server start recording
       winsound.Beep(250,3000)
-
       easygui.ccbox('dont touch the sensor for 3 seconds and then press cont')
       game_start=easygui.ccbox('insert image before the game starts')
-
+      
       
 
 g=Game()
