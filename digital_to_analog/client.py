@@ -1,7 +1,7 @@
 
 import zmq
 import pygame,random,datetime,easygui,winsound
-
+from prefrences import channels, max_time
 
 pygame.init()
 white=(255,255,255)
@@ -34,6 +34,7 @@ class Bird(pygame.sprite.Sprite):
         self.acc = vec(0, 0)
         self.pos = vec(self.rect.center)
         self.fc = 0
+        self.conf_channels = conf_channels(channels)
         self.socket = initialize_client_socket()
 
     def update(self):
@@ -67,22 +68,34 @@ class Bird(pygame.sprite.Sprite):
         now = datetime.datetime.now()
         date = now.strftime('%D')
         f_name = name + date
-        # send info to server
-        self.get_max()
 
-    def get_max(self):
+        self.get_max(f_name)
+
+    def get_max(self,fname):
         easygui.ccbox('insert image with hebrew inst for max check')
         # max config
-        self.socket.send_json(0, flags=0, )
-        incoming = self.socket.recv_json()
-        # send to the server start recording
+        self.socket.send_json(0, flags=0, ) 
         winsound.Beep(250, 3000)
+        incoming = self.socket.recv_json()
+        self.socket.send_json(f_name)
+        incoming = self.socket.recv_json()
+        easygui.ccbox('insert image: dont touch the sensor for 3 seconds and then press cont')
+        self.socket.send_json(0, flags=0, ) #update flag for min config
+        incoming = self.socket.recv_json() 
+        game_start = easygui.ccbox('insert image:before the game starts')
+        self.socket.send_json(0, flags=0, ) #update flag for start recording for game (maybe in 3 sec countdown)
+        incoming = self.socket.recv_json() 
 
-        easygui.ccbox('dont touch the sensor for 3 seconds and then press cont')
-        # min config
-        game_start = easygui.ccbox('insert image before the game starts')
+        def get_vals(channels):
+            str_chan = ''
+            for i in channels:
+                if not i[1] == 0:
+                    str_chan+=i[0]+'_'+str(i[1])+','
 
+            self.socket.send_json(str_chan ) #send str of connected chanels only (format 'channel1_num,chanel2_num,')
+            incoming = self.socket.recv_json() 
 
+            
 class TBlock(pygame.sprite.Sprite):
     def __init__(self,x,h1):
         super().__init__()
@@ -148,7 +161,7 @@ class Game:
         self.all_sprites.add(self.bblock)
         self.score = 0
         self.gover = 0
-        return self.bird.pos
+        
 
     def msg(self, text, x, y, color, size):
         self.font = pygame.font.SysFont('georgia', size, bold=1)
@@ -160,13 +173,19 @@ class Game:
     def pause(self):
         wait = 1
         while wait:
+        self.socket.send_json(0, flags=0, ) #update flag for PAUSE rec (not quit and save)
+        incoming = self.socket.recv_json() 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    self.socket.send_json(0, flags=0, ) #update flag for QUIT AND SAVE DATA
+                    incoming = self.socket.recv_json() 
                     quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         wait = 0
+                        self.socket.send_json(0, flags=0, ) #update flag for CONT
+                        incoming = self.socket.recv_json()
             self.msg("Paused", dw - 100, dh - 100, blue, 40)
             pygame.display.flip()
 
@@ -176,10 +195,14 @@ class Game:
         while wait:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    self.socket.send_json(0, flags=0, ) #update flag for QUIT AND SAVE
+                    incoming = self.socket.recv_json()
                     pygame.quit()
                     quit()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
+                    if event.key == pygame.K_RETURN: 
+                        self.socket.send_json(0, flags=0, ) #update flag NEW GAME (is it a new file?)
+                        incoming = self.socket.recv_json()
                         wait = 0
             self.msg("Gameover", dw - 150, dh - 100, red, 40)
             self.msg("Press Enter to Play Again", dw - 545, dh + 200, red, 40)
@@ -231,6 +254,10 @@ class Game:
             self.update()
             self.draw()
             pygame.display.flip()
+
+class conf_channels(channels):
+    def __init__:
+        self.channels = channels
 
 
 def initialize_client_socket():
