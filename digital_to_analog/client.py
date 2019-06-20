@@ -255,6 +255,10 @@ class Game:
             self.draw()
             pygame.display.flip()
 
+class conf_channels(channels):
+    def __init__:
+        self.channels = channels
+
 
 def initialize_client_socket():
     context = zmq.Context()
@@ -263,12 +267,6 @@ def initialize_client_socket():
     client_socket = context.socket(zmq.REQ)
     client_socket.connect("tcp://localhost:5555")
     return client_socket
-
-class conf_channels(channels):
-    def __init__:
-        self.channels = channels
-
-
 
 
 if __name__ == "__main__":
