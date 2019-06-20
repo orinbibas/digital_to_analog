@@ -7,84 +7,75 @@ import pandas as pd
 
 
 def configure():
-    # # get the "channel_serialNum" message from the client
-    # init_message = nf.get_init_message_from_client()
+    # get the "channel_serialNum" message from the client
+    init_message = nf.get_init_message_from_client()
 
-    # for testing
-    init_message = "2_LW36910"
+    # # for testing
+    # init_message = "2_LW36910,3_LW36908"
 
-    channels_factors = nf.parse_client_init_message(init_message)
+    connections = nf.parse_client_init_message(init_message)
 
     min_max_pressures = []
-    connections = nf.detect_connections(channels_factors)
+    connections = nf.detect_connections(connections)
+
+    # finding max pressure
+    # print("Please press.")
+    t_s = time.time()
+    while True:
+        for connection in connections:
+            # print(f"configuring board number {connection[0]}, channel {connection[1]}")
+            value = connection.sample_device(board_num=connection.board_number)
+            # print(f"value: {value}")
+            connection.max_pressure = value if value > connection.max_pressure else connection.max_pressure
+        t_s2 = time.time()
+        time_diff = t_s2 - t_s
+        # print (time_diff)
+        if time_diff > 3:
+            break
+
+    # finding min pressure
+    # print("Please do not press.")
+    t_s = time.time()
+    while True:
+        for connection in connections:
+            # print(f"configuring board number {connection[0]}, channel {connection[1]}")
+            value = connection.sample_device(board_num=connection.board_number)
+            # print(f"value: {value}")
+            connection.min_pressure = value if value < connection.min_pressure else connection.min_pressure
+        t_s2 = time.time()
+        time_diff = t_s2 - t_s
+        # print (time_diff)
+        if time_diff > 3:
+            break
+
     for connection in connections:
-        print(f"configuring board number {connection[0]}, channel {connection[1]}")
-        board_num = connection[0]
-        channel = connection[1]
-        factor = connection[2]
-
-        # finding max pressure
-        print("Please press.")
-        t_s = time.time()
-        max_val = 0
-        while True:
-            value = nf.sample_device(board_num, channel, factor)
-            # print(f"value: {value}")
-            max_val = value if value > max_val else max_val
-            t_s2 = time.time()
-            time_diff = t_s2 - t_s
-            # print (time_diff)
-            if time_diff > 3:
-                break
-
-        # finding min pressure
-        print("Please do not press.")
-        t_s = time.time()
-        min_val = 0
-        while True:
-            value = nf.sample_device(board_num, channel, factor)
-            # print(f"value: {value}")
-            min_val = value if value < min_val else min_val
-            t_s2 = time.time()
-            time_diff = t_s2 - t_s
-            # print (time_diff)
-            if time_diff > 3:
-                break
-
-        if max_val == 0:
-            min_max_pressures.append((0, 0.000001))
-            continue
-        # print(f"adding max: {max_val}, min: {min_val} to pressures")
-        max_val = max_val * 0.2
-        min_max_pressures.append((min_val, max_val))
-        nf.write_line_to_file(connection, "w", f"Channel number {channel}\n"
-                                               f"Max Pressure: {max_val} Newtons\n\n")
-    return connections, min_max_pressures
+        connection.max_pressure *= 0.2
+        connection.write_line_to_file("w", f"Channel number {connection.channel_number}\n"
+                                               f"Max Pressure: {connection.max_pressure} Newtons\n\n")
+    return connections
 
 
-def main_loop(connections, extremums):
-    df_list = [pd.DataFrame(columns=nf.columns) for i in range(len(connections))]
+def main_loop(connections):
+    for connection in connections:
+        connection.df = pd.DataFrame(columns=nf.columns)
 
     while True:
         # take first timestamp
         ts_1 = time.time()
 
-        for index, connection in enumerate(connections):
-            # get the board and channel numbers
-            board_number = connection[0]
-            channel = connection[1]
-
+        for connection in connections:
             # sample value from device
-            current_value = nf.sample_device(board_number, channel, connection[2])
+            current_value = connection.sample_device(board_num=connection.board_number)
 
             if np.isnan(current_value):
                 continue
 
             # normalize the voltage value
-            noramlized_value = nf.normalize_value(current_value, extremums[index])
+            noramlized_value = nf.normalize_value(current_value,
+                                                  [connection.max_pressure, connection.min_pressure])
             # print (f'{noramlized_value} at {datetime.fromtimestamp(time.time())}')
 
-            df_list[index] = df_list[index].append(
+            connection.df = connection.df.append(
                 {"timestamp": datetime.fromtimestamp(ts_1),
                  "value": current_value}, ignore_index=True)
 
@@ -104,6 +95,7 @@ def main_loop(connections, extremums):
             #     print (f'sleep was negative at {datetime.fromtimestamp(time.time())}')
 
             if nf.listen_for_quit_message():
+                df_list = [connection.df for connection in connections]
                 return df_list
 
 
@@ -115,9 +107,9 @@ def wrap_up(connections, df_list):
 
 
 if __name__ == "__main__":
-    connections, extremum_pressures = configure()
+    connections = configure()
 
-    df_list = main_loop(connections, extremum_pressures)
+    df_list = main_loop(connections)
 
     wrap_up(connections, df_list)
 
