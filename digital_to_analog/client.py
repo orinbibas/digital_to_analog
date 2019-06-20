@@ -1,7 +1,7 @@
 
 import zmq
 import pygame,random,datetime,easygui,winsound
-from prefrences import channels, max_time
+from preferences import channels, max_time
 
 pygame.init()
 white=(255,255,255)
@@ -24,7 +24,7 @@ blist=[[0,200],[0,200],[0,200],[80,280],[90,270],[100,260],[110,250],[120,240],[
 
 
 class Bird(pygame.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, game, socket):
         super().__init__()
         self.image = pimg[0]
         self.image = pygame.transform.scale(self.image, (100, 85))
@@ -35,7 +35,7 @@ class Bird(pygame.sprite.Sprite):
         self.pos = vec(self.rect.center)
         self.fc = 0
         self.conf_channels = conf_channels(channels)
-        self.socket = initialize_client_socket()
+        self.socket = socket
 
     def update(self):
         self.acc = vec(0, 1.5)
@@ -71,20 +71,16 @@ class Bird(pygame.sprite.Sprite):
 
         self.get_max(f_name)
 
-    def get_max(self,fname):
+    def get_max(self, fname):
         easygui.ccbox('insert image with hebrew inst for max check')
         # max config
-        self.socket.send_json(0, flags=0, ) 
+        self.socket.send_json(0, flags=0)
         winsound.Beep(250, 3000)
         incoming = self.socket.recv_json()
-        self.socket.send_json(f_name)
+        self.socket.send_json(self.conf_channels)
         incoming = self.socket.recv_json()
         easygui.ccbox('insert image: dont touch the sensor for 3 seconds and then press cont')
-        self.socket.send_json(0, flags=0, ) #update flag for min config
-        incoming = self.socket.recv_json() 
-        game_start = easygui.ccbox('insert image:before the game starts')
-        self.socket.send_json(0, flags=0, ) #update flag for start recording for game (maybe in 3 sec countdown)
-        incoming = self.socket.recv_json() 
+
 
         def get_vals(channels):
             str_chan = ''
@@ -123,7 +119,7 @@ class BBlock(pygame.sprite.Sprite):
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, socket):
         self.bgx = 0
         self.x = 650
         self.h1 = 180
@@ -131,6 +127,7 @@ class Game:
         self.score = 0
         self.gover = 0
         self.last = pygame.time.get_ticks()
+        self.socket = socket
 
     def blockgen(self):
         x = random.randint(620, 650)
@@ -161,6 +158,8 @@ class Game:
         self.all_sprites.add(self.bblock)
         self.score = 0
         self.gover = 0
+        self.socket.send_json(1, flags=0, )  # update flag for PAUSE rec (not quit and save)
+        incoming = self.socket.recv_json()
         
 
     def msg(self, text, x, y, color, size):
@@ -173,18 +172,18 @@ class Game:
     def pause(self):
         wait = 1
         while wait:
-        self.socket.send_json(0, flags=0, ) #update flag for PAUSE rec (not quit and save)
-        incoming = self.socket.recv_json() 
+            self.socket.send_json(2, flags=0, )
+            incoming = self.socket.recv_json()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    self.socket.send_json(0, flags=0, ) #update flag for QUIT AND SAVE DATA
-                    incoming = self.socket.recv_json() 
+                    self.socket.send_json(2, flags=0, )
+                    incoming = self.socket.recv_json()
                     quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         wait = 0
-                        self.socket.send_json(0, flags=0, ) #update flag for CONT
+                        self.socket.send_json(1, flags=0, )
                         incoming = self.socket.recv_json()
             self.msg("Paused", dw - 100, dh - 100, blue, 40)
             pygame.display.flip()
@@ -195,13 +194,13 @@ class Game:
         while wait:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.socket.send_json(0, flags=0, ) #update flag for QUIT AND SAVE
+                    self.socket.send_json(2, flags=0, )
                     incoming = self.socket.recv_json()
                     pygame.quit()
                     quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN: 
-                        self.socket.send_json(0, flags=0, ) #update flag NEW GAME (is it a new file?)
+                        self.socket.send_json(1, flags=0, )
                         incoming = self.socket.recv_json()
                         wait = 0
             self.msg("Gameover", dw - 150, dh - 100, red, 40)
@@ -255,8 +254,9 @@ class Game:
             self.draw()
             pygame.display.flip()
 
+
 class conf_channels(channels):
-    def __init__:
+    def __init__(self):
         self.channels = channels
 
 
@@ -270,8 +270,9 @@ def initialize_client_socket():
 
 
 if __name__ == "__main__":
-    g = Game()
-    b = Bird(g)
+    socket = initialize_client_socket()
+    g = Game(socket)
+    b = Bird(g, socket)
     while g.run:
         b.start_screen()
         g.new()

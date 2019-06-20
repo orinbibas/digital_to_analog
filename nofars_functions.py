@@ -5,7 +5,6 @@ import numpy as np
 from os import makedirs, path
 import errno
 from devices_config import device_dictionary
-import pandas as pd
 
 MAX_BOARD_NUM = 100
 columns = ["timestamp", "value"]
@@ -92,22 +91,3 @@ def append_df_to_log(connection, df):
     with open(filename, 'a') as f:
         df.to_csv(f, header=False, index=False)
 
-
-def listen_for_quit_message():
-    # TODO
-    # this function should check if there is a message saying "quit" from the client
-    # return True if such a message was accepted, otherwise False
-    return False
-
-
-def get_init_message_from_client():
-    # gets the init message from the client in the following format:
-    # "{channelNum1}_{serialNum1},{channelNum2}_{serialNum2}..."
-    # returns a string
-    #     TODO
-    pass
-
-
-def send_normalized_value(value_to_send):
-    # TODO
-    pass

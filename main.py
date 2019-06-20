@@ -4,18 +4,18 @@ from time import sleep
 import numpy as np
 import nofars_functions as nf
 import pandas as pd
+import zmq
 
 
-def configure():
+def configure(socket):
     # get the "channel_serialNum" message from the client
-    init_message = nf.get_init_message_from_client()
-
+    init_message = socket.recv_json()
+    socket.send_json("gotit")
     # # for testing
     # init_message = "2_LW36910,3_LW36908"
 
     connections = nf.parse_client_init_message(init_message)
 
-    min_max_pressures = []
     connections = nf.detect_connections(connections)
 
     # finding max pressure
@@ -55,7 +55,7 @@ def configure():
     return connections
 
 
-def main_loop(connections):
+def main_loop(connections, socket):
     for connection in connections:
         connection.df = pd.DataFrame(columns=nf.columns)
 
@@ -82,9 +82,6 @@ def main_loop(connections):
             # take last timestamp
             ts_2 = time.time()
 
-            # send to next
-            nf.send_normalized_value(noramlized_value)
-
             # compute 0.01 - the timestamp differences
             sleep_time = 0.01 - (ts_2 - ts_1)
 
@@ -94,9 +91,16 @@ def main_loop(connections):
             # else:
             #     print (f'sleep was negative at {datetime.fromtimestamp(time.time())}')
 
-            if nf.listen_for_quit_message():
-                df_list = [connection.df for connection in connections]
-                return df_list
+            # send to next
+            try:
+                incoming = socket.recv_json(flags=zmq.NOBLOCK)
+                if incoming == 2:
+                    df_list = [connection.df for connection in connections]
+                    return df_list
+                socket.send_json(noramlized_value)
+
+            except zmq.error.ZMQError:
+                continue
 
 
 def wrap_up(connections, df_list):
@@ -106,11 +110,26 @@ def wrap_up(connections, df_list):
     return
 
 
+def server_socket():
+    context = zmq.Context()
+
+    # socket to talk to client
+    socket = context.socket(zmq.REP)
+    socket.bind("tcp://*:5555")
+
+    # iterate through requests of data
+    while True:
+        incoming = socket.recv_json()
+        socket.send_json("gotit")
+        if incoming == 0:
+            connections = configure(socket)
+            continue
+        elif incoming == 1:
+            df_list = main_loop(connections, socket)
+        elif incoming == 2:
+            wrap_up(connections, df_list)
+            exit(0)
+
+
 if __name__ == "__main__":
-    connections = configure()
-
-    df_list = main_loop(connections)
-
-    wrap_up(connections, df_list)
-
-    exit(0)
+    server_socket()
