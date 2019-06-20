@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from time import sleep
 import numpy as np
-import nofars_functions as nf
+import digital_to_analog as nf
 import pandas as pd
 import zmq
 
@@ -13,7 +13,6 @@ def configure(socket):
     socket.send_json("gotit")
     # # for testing
     # init_message = "2_LW36910,3_LW36908"
-
     connections = nf.parse_client_init_message(init_message)
 
     connections = nf.detect_connections(connections)
@@ -96,6 +95,7 @@ def main_loop(connections, socket):
                 incoming = socket.recv_json(flags=zmq.NOBLOCK)
                 if incoming == 2:
                     df_list = [connection.df for connection in connections]
+                    socket.send_json("gottit")
                     return df_list
                 socket.send_json(noramlized_value)
 
@@ -126,9 +126,9 @@ def server_socket():
             continue
         elif incoming == 1:
             df_list = main_loop(connections, socket)
-        elif incoming == 2:
             wrap_up(connections, df_list)
             exit(0)
+            break
 
 
 if __name__ == "__main__":

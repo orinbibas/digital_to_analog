@@ -34,8 +34,8 @@ class Bird(pygame.sprite.Sprite):
         self.acc = vec(0, 0)
         self.pos = vec(self.rect.center)
         self.fc = 0
-        self.conf_channels = conf_channels(channels)
         self.socket = socket
+        self.connected_channels = self.conf_channels(channels)
 
     def update(self):
         self.acc = vec(0, 1.5)
@@ -77,19 +77,16 @@ class Bird(pygame.sprite.Sprite):
         self.socket.send_json(0, flags=0)
         winsound.Beep(250, 3000)
         incoming = self.socket.recv_json()
-        self.socket.send_json(self.conf_channels)
+        self.socket.send_json(self.connected_channels)
         incoming = self.socket.recv_json()
         easygui.ccbox('insert image: dont touch the sensor for 3 seconds and then press cont')
 
-
-        def get_vals(channels):
-            str_chan = ''
-            for i in channels:
-                if not i[1] == 0:
-                    str_chan+=i[0]+'_'+str(i[1])+','
-
-            self.socket.send_json(str_chan ) #send str of connected chanels only (format 'channel1_num,chanel2_num,')
-            incoming = self.socket.recv_json() 
+    def conf_channels(self, channels):
+        str_chan = ''
+        for i in channels:
+            if not i[1] == 0:
+                str_chan+=i[0]+'_'+str(i[1])+','
+        return str_chan[:(len(str_chan)-1)]
 
             
 class TBlock(pygame.sprite.Sprite):
@@ -145,7 +142,7 @@ class Game:
         return x, h1, h2
 
     def new(self):
-        self.bird = Bird(self)
+        self.bird = Bird(self, self.socket)
         self.all_sprites = pygame.sprite.Group()
         self.all_sprites.add(self.bird)
         self.tblock = TBlock(self.x, self.h1)
@@ -253,11 +250,6 @@ class Game:
             self.update()
             self.draw()
             pygame.display.flip()
-
-
-class conf_channels(channels):
-    def __init__(self):
-        self.channels = channels
 
 
 def initialize_client_socket():

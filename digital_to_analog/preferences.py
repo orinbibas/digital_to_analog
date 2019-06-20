@@ -2,10 +2,14 @@
 import os
 #Channel names: leave 'None' if not connected.
 #if connected: enter channel number minus 1 (for 1 enter 0, for 2 enter 1, for 3 enter 2)
-channel1= None
-channel2= None
-channel3= None
-
+channels= [('0', 0),
+('1', 'LW43893'),
+('2', 'LW43894'),
+('3', 0),
+('4', 0),
+('5', 0),
+('6', 0),
+('7', 0)]
 #picture names
 
 #game maximal time in seconds
