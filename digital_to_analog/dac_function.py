@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
-""" dac functions"""
 from mcculw import ul
 from mcculw.enums import ULRange
 from mcculw.ul import ULError
+import numpy as np
 from os import makedirs, path
 import errno
-import numpy as np
+import random
 
 
 def sample_device(board_num):
@@ -19,7 +17,7 @@ def sample_device(board_num):
         value = ul.v_in(board_num, channel, ai_range)
 
     except ULError:
-        return 10
+        return random.random()[0]
     return value
 
 
