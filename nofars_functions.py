@@ -5,24 +5,51 @@ import numpy as np
 from os import makedirs, path
 import errno
 from devices_config import device_dictionary
+import pandas as pd
 
 MAX_BOARD_NUM = 100
 columns = ["timestamp", "value"]
 
 
-def sample_device(board_num, channel, factor):
-    # Reads an A/D input channel, and returns a voltage value only if the board is on.
-    ai_range = ULRange.BIP10VOLTS
+class Connection:
+    def __init__(self, board_number=None, channel_number=None,
+                 max_pressure=0, min_pressure=0, factor=None):
+        self.board_number = board_number
+        self.channel_number = channel_number
+        self.max_pressure = max_pressure
+        self.min_pressure = min_pressure
+        self.volt_to_newton_factor = factor
+        self.df = None
 
-    try:
-        # Get a value from the device
-        value = ul.v_in(board_num, channel, ai_range)
 
-    except ULError:
-        return np.nan
+    def sample_device(self, board_num):
 
-    newton_value = value * factor
-    return newton_value
+        # Reads an A/D input channel, and returns a voltage value only if the board is on.
+        ai_range = ULRange.BIP10VOLTS
+
+        try:
+            # Get a value from the device
+            value = ul.v_in(board_num, self.channel_number, ai_range)
+
+        except ULError:
+            return np.nan
+
+        newton_value = value * self.volt_to_newton_factor
+        return newton_value
+
+
+    def write_line_to_file(self, open_mode: str, line: str):
+        filename = f"./log/board_{self.board_number}_channel_{self.channel_number}.csv"
+        if not path.exists(path.dirname(filename)):
+            try:
+                makedirs(path.dirname(filename))
+            except OSError as exc:
+                if exc.errno != errno.EEXIST:
+                    raise
+        with open(filename, open_mode) as f:
+            f.write(line)
+            if open_mode == "w":
+                f.write(f"Timestamp, Value\n")
 
 
 def normalize_value(value, extremums):
@@ -36,43 +63,28 @@ def normalize_value(value, extremums):
     return (value - minimum_value) / (maximum_value - minimum_value)
 
 
-def write_line_to_file(connection: tuple, open_mode: str, line: str):
-    filename = f"./log/board_{connection[0]}_channel_{connection[1]}.csv"
-    if not path.exists(path.dirname(filename)):
-        try:
-            makedirs(path.dirname(filename))
-        except OSError as exc:
-            if exc.errno != errno.EEXIST:
-                raise
-    with open(filename, open_mode) as f:
-        f.write(line)
-        if open_mode == "w":
-            f.write(f"Timestamp, Value\n")
-
-
 def volt_to_newton(volts, factor):
     return volts * factor
 
 
-def detect_connections(channels_factors):
-    connections = []
+def detect_connections(connections):
     for board in range(MAX_BOARD_NUM):
-        for couple in channels_factors:
-            sample = sample_device(board, couple[0], couple[1])
+        for connection in connections:
+            sample = connection.sample_device(board_num=board)
             if not np.isnan(sample):
-                connections.append((board, couple[0], couple[1]))
+                connection.board_number = board
                 continue
     return connections
 
 
 def parse_client_init_message(init_message: str):
-    channel_factors = []
+    connections = []
     couples = init_message.split(sep=",")
     for couple in couples:
         channel_number, serial_number = couple.split("_")
         factor = device_dictionary[serial_number]
-        channel_factors.append((int(channel_number), factor))
-    return channel_factors
+        connections.append(Connection(channel_number=int(channel_number), factor=factor))
+    return connections
 
 
 def append_df_to_log(connection, df):
