@@ -1,6 +1,6 @@
 
 import zmq
-import pygame,random,datetime,easygui,winsound
+import pygame,random,datetime,easygui,winsound,time
 from prefrences import channels, max_time
 
 pygame.init()
@@ -63,27 +63,46 @@ class Bird(pygame.sprite.Sprite):
         self.rect.center = self.pos
         self.mask = pygame.mask.from_surface(self.image)
 
-    def start_screen(self):
-        name = easygui.enterbox('full name:')
-        now = datetime.datetime.now()
-        date = now.strftime('%D')
-        f_name = name + date
-        self.get_max(f_name)
+    def pre_run():
+        msg = "Enter sensors details"
+        title = "Sensors cofiguration"
+        fieldNames = ["Channel00","Channel01","Channel02","Channel03","Channel04","Channel05","Chanel06","Chanel07"]
+        fieldValues = []  # we start with blanks for the values
+        fieldValues = easygui.multenterbox(msg,title, fieldNames)
+        str_vals = ''
+        actives = []
+        for i in range(len(fieldValues)):
+            if fieldValues[i] == '':
+                pass
+            else:
+                str_vals += fieldNames[i]+'_'+fieldValues[i]+','
+                actives.append((fieldNames[i],fieldValues[i]))
+        
+        return actives , str_vals
+        
+    def assert_sensors(actives,str_vals):
+        actives,str_vals = pre_run()
+        check = easygui.ccbox(msg=f'this are the active sensors and their serial number\n {actives} \n if any of the information is not correct please press cancel and start again',title='sensors info')
+        if check == True:
+            return str_vals
+        else:
+            pygame.quit()
 
+    
     def get_max(self,fname):
-        easygui.ccbox('insert image with hebrew inst for max check')
-        # max config
-        self.socket.send_json(0, flags=0, ) 
-        winsound.Beep(250, 3000)
-        incoming = self.socket.recv_json()
-        self.socket.send_json(self.connected_channels(channels))
-        incoming = self.socket.recv_json()
-        easygui.ccbox('insert image: dont touch the sensor for 3 seconds and then press cont')
-        self.socket.send_json(0, flags=0, ) #update flag for min config
-        incoming = self.socket.recv_json() 
-        game_start = easygui.ccbox('insert image:before the game starts')
-        self.socket.send_json(0, flags=0, ) #update flag for start recording for game (maybe in 3 sec countdown)
-        incoming = self.socket.recv_json() 
+            easygui.ccbox('insert image with hebrew inst for max check')
+            # max config
+            self.socket.send_json(0, flags=0, ) 
+            winsound.Beep(250, 3000)
+            incoming = self.socket.recv_json()
+            self.socket.send_json(self.connected_channels(channels))
+            incoming = self.socket.recv_json()
+            easygui.ccbox('insert image: dont touch the sensor for 3 seconds and then press cont')
+            self.socket.send_json(0, flags=0, ) #update flag for min config
+            incoming = self.socket.recv_json() 
+            game_start = easygui.ccbox('insert image:before the game starts')
+            self.socket.send_json(0, flags=0, ) #update flag for start recording for game (maybe in 3 sec countdown)
+            incoming = self.socket.recv_json() 
 
     def conf_channels(channels):
         str_chan = ''
@@ -159,6 +178,7 @@ class Game:
         self.all_sprites.add(self.bblock)
         self.score = 0
         self.gover = 0
+        self.game_time = pygame.time.get_ticks()
         
 
     def msg(self, text, x, y, color, size):
@@ -191,8 +211,8 @@ class Game:
         wait = 1
         self.gover = 1
         while wait:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+            for event in pygame.event.get(): 
+                if event.type == pygame.QUIT or self.game_time()*100 >=max_time:
                     self.socket.send_json(0, flags=0, ) #update flag for QUIT AND SAVE
                     incoming = self.socket.recv_json()
                     pygame.quit()
@@ -267,8 +287,9 @@ if __name__ == "__main__":
     b = Bird(g)
     print(b.conf_channels)
 
-    #while g.run:
-        #b.start_screen()
-        #g.new()
-        #g.run()
+    while g.run:
+        b.assert_sensors()
+        b.start_screen()
+        g.new()
+        g.run()
 
